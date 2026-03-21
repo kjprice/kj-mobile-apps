@@ -1,51 +1,93 @@
-You are a mobile app developer who is an expert in React Native and Expo. Your job is to create a prompt to give to claude code so that claude code creates a new mobile app from scratch. Your instructions should be highly detailed and comprehensive.
+# Instructions for Generating a Claude Code Prompt
 
-The app can be described with the following:
+You are a mobile app developer who is an expert in React Native and Expo. Your job is to generate a **single, comprehensive prompt** that will be given to Claude Code so it can build a complete mobile app from scratch.
+
+Your output should be one large prompt — not a conversation. It must be detailed enough that Claude Code can execute every step without asking follow-up questions.
+
+## The App Idea
+
+The user will describe their app below. Use this as the basis for the entire prompt you generate.
 
 <APP_DETAILS>
-
-# General Instructions
-
-We also need detailed instructions for submitting the app to the app store and play store including all metadata. We need the ability to test premium features and before we submit the app we need to ensure that premium features can be purchased.
-
-A PLAN.md file should be created and maintained so that claude code can track progress and ensure all steps are completed.
-
-We need instructions for updating all assets/artifacts such as screenshots, splash-icon, etc (Chat GPT - DALLE should be used).
-
-Use expo-haptic instead of expo-av.
-
-Package should be com.kjprice.NAME. Subscriptions should be `com.kjprice.NAME.subscription.FREQUENCY`.
-
-Create a list of five potential app names ordered by which is best.
-
-Create the store.config.json and eas.json files with everything they need.
-
-My appleid and google account is kjprice12@gmail.com.
-
-## API Usage
-
-The API should be used as necessary to provide the app with data and functionality.
-
-P8 can be found here /Users/kprice/repos/misc/kj/kj-mobile-apps/data/AuthKey_985XKZ364C.p8
-Issuer ID: 867cfb5c-0609-4a7f-ba47-93ebf99a2c13                                                                                                                        
-Key ID: 985XKZ364C
-Google service account JSON can be found here /Users/kprice/repos/misc/kj/kj-mobile-apps/data/service-account.json
-
-
-# IAP Product Setup Instructions
-
-How to set up in-app purchases for a React Native + Expo app using `react-native-iap`.
+(paste app description here)
+</APP_DETAILS>
 
 ---
 
-## 1. Install Dependencies
+## What Your Prompt Must Include
+
+The prompt you generate for Claude Code must cover **all** of the following sections. Be specific and detailed in each.
+
+### 1. App Names
+- Generate a list of five potential app names, ordered by best fit
+- The user will pick one before giving the prompt to Claude Code, so present them as options
+
+### 2. Full App Implementation
+- Complete React Native + Expo app code
+- All screens, navigation, components, and logic
+- Use `expo-haptics` for haptic feedback (do NOT use `expo-av`)
+- Include a premium/free tier with feature gating
+
+### 3. In-App Purchases
+- Implement using `react-native-iap` (see IAP Reference below)
+- The premium tier must be purchasable before app store submission
+- Include sandbox testing instructions
+- Product IDs must follow this pattern:
+  - Subscriptions: `com.kjprice.APP_NAME.subscription.monthly`, `.yearly`
+  - Lifetime: `com.kjprice.APP_NAME.subscription.lifetime`
+
+### 4. App Store & Play Store Submission
+- Include **all** metadata: title, subtitle, description, keywords, categories, age rating, privacy policy URL, etc.
+- Include step-by-step submission instructions for both stores
+- Package name: `com.kjprice.APP_NAME`
+
+### 5. Configuration Files
+- `store.config.json` — complete store metadata config
+- `eas.json` — EAS Build profiles (development, preview, production)
+- `app.json` — full Expo config with all required plugins
+
+### 6. Visual Assets
+- Include instructions for generating all required assets using ChatGPT/DALL-E:
+  - App icon (1024x1024)
+  - Splash screen
+  - App Store screenshots (all required sizes)
+  - Feature graphic (Play Store)
+- Describe the style/theme to use when generating each asset
+
+### 7. Progress Tracking
+- Create a `PLAN.md` file at the project root
+- The plan must list every step with checkboxes so Claude Code can track progress
+- Update `PLAN.md` as each step is completed
+
+---
+
+## Fixed Configuration
+
+Include these values in the prompt exactly as-is:
+
+| Setting | Value |
+|---------|-------|
+| Package prefix | `com.kjprice` |
+| Apple ID / Google account | kjprice12@gmail.com |
+| Apple P8 key path | `/Users/kprice/repos/misc/kj/kj-mobile-apps/data/AuthKey_985XKZ364C.p8` |
+| Apple Issuer ID | `867cfb5c-0609-4a7f-ba47-93ebf99a2c13` |
+| Apple Key ID | `985XKZ364C` |
+| Google service account | `/Users/kprice/repos/misc/kj/kj-mobile-apps/data/service-account.json` |
+
+---
+
+## IAP Reference
+
+Include the following IAP setup guide in the prompt so Claude Code has all the technical details it needs.
+
+### Install Dependencies
 
 ```bash
 npm install react-native-iap
 npx expo install expo-build-properties
 ```
 
-## 2. Configure `app.json` Plugins
+### Configure `app.json` Plugins
 
 ```json
 {
@@ -60,22 +102,22 @@ npx expo install expo-build-properties
 
 The `react-native-iap` config plugin automatically adds the In-App Purchase entitlement to the Xcode project.
 
-## 3. Define Product IDs
+### Define Product IDs
 
-Create a constants file with your product IDs. These must exactly match what's configured in App Store Connect / Google Play Console.
+Create a constants file with product IDs. These must exactly match what's configured in App Store Connect / Google Play Console.
 
 ```typescript
 const SUBSCRIPTION_SKUS = [
-  'com.yourapp.subscription.monthly',
-  'com.yourapp.subscription.yearly',
+  'com.kjprice.APP_NAME.subscription.monthly',
+  'com.kjprice.APP_NAME.subscription.yearly',
 ];
 
 const PRODUCT_SKUS = [
-  'com.yourapp.subscription.lifetime', // non-consumable
+  'com.kjprice.APP_NAME.subscription.lifetime', // non-consumable
 ];
 ```
 
-## 4. IAP Service Implementation
+### IAP Service Implementation
 
 The critical flow is: **connect → pre-fetch products → then purchase**.
 
@@ -92,9 +134,9 @@ const [subs, prods] = await Promise.all([
 ]);
 
 // Step 3: Now purchases will work
-await RNIap.requestSubscription({ sku: 'com.yourapp.subscription.monthly' });
+await RNIap.requestSubscription({ sku: 'com.kjprice.APP_NAME.subscription.monthly' });
 // or
-await RNIap.requestPurchase({ sku: 'com.yourapp.subscription.lifetime' });
+await RNIap.requestPurchase({ sku: 'com.kjprice.APP_NAME.subscription.lifetime' });
 
 // Step 4: Finish the transaction
 await RNIap.finishTransaction({ purchase, isConsumable: false });
@@ -103,11 +145,9 @@ await RNIap.finishTransaction({ purchase, isConsumable: false });
 await RNIap.endConnection();
 ```
 
-### Why pre-fetching is required
+**Why pre-fetching is required:** StoreKit needs to load and cache product information from Apple's servers before any purchase can be attempted. Without calling `getSubscriptions()`/`getProducts()` first, `requestPurchase()` will fail with "Invalid product ID" even if everything is configured correctly in App Store Connect.
 
-StoreKit needs to load and cache product information from Apple's servers before any purchase can be attempted. Without calling `getSubscriptions()`/`getProducts()` first, `requestPurchase()` will fail with **"Invalid product ID"** even if everything is configured correctly in App Store Connect.
-
-## 5. Graceful Degradation (Expo Go / Simulator)
+### Graceful Degradation (Expo Go / Simulator)
 
 `react-native-iap` requires native modules not available in Expo Go. Use dynamic require:
 
@@ -122,26 +162,25 @@ try {
 
 Then guard all IAP calls with `if (!RNIap) return;`.
 
-## 6. App Store Connect Setup
+### App Store Connect Setup
 
-### Paid Applications Agreement (required first!)
+**Paid Applications Agreement (required first!)**
 1. App Store Connect → **Business** (or Agreements, Tax, and Banking)
 2. Ensure **Paid Apps** agreement is **Active** (green)
 3. Without this, no products will resolve — `getProducts()` returns empty arrays
 
-### Create Subscription Group
+**Create Subscription Group**
 1. Your app → **Features** → **In-App Purchases**
 2. Create a **Subscription Group** (e.g., "Premium Access")
 3. **Add a localization to the group itself** (not just individual products)
 
-### Create Products
-For each product:
+**Create Products** — for each product:
 1. Set **Product ID** (must match code exactly)
 2. Add **Localization** (display name + description)
 3. Set **Price**
 4. For subscriptions: set **Duration**
 
-### Product Statuses
+**Product Statuses:**
 | Status | Sandbox Testing Works? |
 |--------|----------------------|
 | Missing Metadata | No |
@@ -149,18 +188,18 @@ For each product:
 | Waiting for Review | Yes |
 | Approved | Yes |
 
-## 7. Sandbox Testing
+### Sandbox Testing
 
-### Create Sandbox Tester
+**Create Sandbox Tester:**
 1. App Store Connect → **Users and Access** → **Sandbox** tab → **Testers**
 2. Create a new tester with a unique email
 
-### On Device
+**On Device:**
 1. iPhone Settings → **Developer** → **Sandbox Apple ID** (or Settings → App Store → Sandbox Account)
 2. Sign in with sandbox tester credentials
 3. IAP does **NOT** work on iOS Simulator or in Expo Go — use a physical device with a dev/preview build
 
-### Build for Testing
+**Build for Testing:**
 ```bash
 # Physical device (ad-hoc)
 eas build --platform ios --profile preview
@@ -169,7 +208,7 @@ eas build --platform ios --profile preview
 eas build --platform ios --profile development
 ```
 
-## 8. EAS Build Profiles
+### EAS Build Profiles
 
 All iOS profiles need `"image": "latest"` for `react-native-iap` (requires Xcode 16+ / iOS 18 SDK):
 
@@ -193,7 +232,7 @@ All iOS profiles need `"image": "latest"` for `react-native-iap` (requires Xcode
 }
 ```
 
-## 9. Common Pitfalls
+### Common Pitfalls
 
 | Problem | Cause | Fix |
 |---------|-------|-----|
@@ -206,7 +245,7 @@ All iOS profiles need `"image": "latest"` for `react-native-iap` (requires Xcode
 | Subscription Group "Save" grayed out | Group needs its own localization | Add localization to the group, not just individual products |
 | History screen freezes | `getHistoryDaysLimit` returns Infinity | Cap to a finite number (e.g., 365) |
 
-## 10. Submitting IAP Products
+### Submitting IAP Products
 
 IAP products don't have their own "Submit for Review." Instead:
 1. Go to your app's **Distribution** tab → version page
