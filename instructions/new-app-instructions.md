@@ -1,23 +1,35 @@
+You are a mobile app developer who is an expert in React Native and Expo. Your job is to create a prompt to give to claude code so that claude code creates a new mobile app from scratch. Your instructions should be highly detailed and comprehensive.
+
+The app can be described with the following:
+
+<APP_DETAILS>
+
 # General Instructions
 
 We also need detailed instructions for submitting the app to the app store and play store including all metadata. We need the ability to test premium features and before we submit the app we need to ensure that premium features can be purchased.
 
-	We need instructions for updating all assets/artifacts such as screenshots, splash-icon, etc (Chat GPT - DALLE should be used).
+A PLAN.md file should be created and maintained so that claude code can track progress and ensure all steps are completed.
+
+We need instructions for updating all assets/artifacts such as screenshots, splash-icon, etc (Chat GPT - DALLE should be used).
 
 Use expo-haptic instead of expo-av.
 
 Package should be com.kjprice.NAME. Subscriptions should be `com.kjprice.NAME.subscription.FREQUENCY`.
 
-Create a list of five names ordered by which is best.
+Create a list of five potential app names ordered by which is best.
 
 Create the store.config.json and eas.json files with everything they need.
 
 My appleid and google account is kjprice12@gmail.com.
 
+## API Usage
+
+The API should be used as necessary to provide the app with data and functionality.
+
 P8 can be found here /Users/kprice/repos/misc/kj/kj-mobile-apps/data/AuthKey_985XKZ364C.p8
 Issuer ID: 867cfb5c-0609-4a7f-ba47-93ebf99a2c13                                                                                                                        
 Key ID: 985XKZ364C
-Google service account JSON can be found here /Users/kprice/repos/misc/kj/kj-mobile-apps/data/service-account.json 
+Google service account JSON can be found here /Users/kprice/repos/misc/kj/kj-mobile-apps/data/service-account.json
 
 
 # IAP Product Setup Instructions
