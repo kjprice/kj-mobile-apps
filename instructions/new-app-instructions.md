@@ -36,17 +36,75 @@ The prompt you generate for Claude Code must cover **all** of the following sect
   - Subscriptions: `com.kjprice.APP_NAME.subscription.monthly`, `.yearly`
   - Lifetime: `com.kjprice.APP_NAME.subscription.lifetime`
 
-### 4. App Store & Play Store Submission
+### 4. Legal Pages (Required for App Store Approval)
+
+Apps with subscriptions **will be rejected** without these. Set them up before submitting.
+
+**Privacy Policy page:**
+- Create `privacy-policy/APP_NAME.html` in the `kj-mobile-apps` repo
+- Hosted at: `https://kjprice.github.io/kj-mobile-apps/privacy-policy/APP_NAME.html`
+- Must cover: what data is collected (or not), local storage, IAP payment handling, third-party services, children's privacy, contact email
+
+**Terms of Use (EULA):**
+- Use Apple's standard EULA: `https://www.apple.com/legal/internet-services/itunes/dev/stdeula/`
+- No custom page needed unless you have special terms
+
+**In-app links (PaywallModal or purchase screen):**
+- Add functional links to both Privacy Policy and Terms of Use in the purchase flow
+- Example:
+  ```tsx
+  <View style={styles.legalLinks}>
+    <TouchableOpacity onPress={() => Linking.openURL('https://kjprice.github.io/kj-mobile-apps/privacy-policy/APP_NAME.html')}>
+      <Text style={styles.legalLink}>Privacy Policy</Text>
+    </TouchableOpacity>
+    <Text style={styles.legalSeparator}>•</Text>
+    <TouchableOpacity onPress={() => Linking.openURL('https://www.apple.com/legal/internet-services/itunes/dev/stdeula/')}>
+      <Text style={styles.legalLink}>Terms of Use</Text>
+    </TouchableOpacity>
+  </View>
+  ```
+
+**App Store Connect metadata:**
+- Set **Privacy Policy URL** field in App Info Localizations → must point to the actual privacy policy page (NOT the support page)
+- Add to the **App Description** (bottom):
+  ```
+  SUBSCRIPTION INFO
+  • Monthly ($X.XX/month) and Yearly ($XX.XX/year) auto-renewable subscriptions available
+  • Payment is charged to your Apple ID account at confirmation of purchase
+  • Subscription automatically renews unless canceled at least 24 hours before the end of the current period
+  • Your account will be charged for renewal within 24 hours prior to the end of the current period
+  • You can manage and cancel subscriptions in your Account Settings on the App Store after purchase
+
+  Privacy Policy: https://kjprice.github.io/kj-mobile-apps/privacy-policy/APP_NAME.html
+  Terms of Use (EULA): https://www.apple.com/legal/internet-services/itunes/dev/stdeula/
+  ```
+
+**Can be set via API:**
+```bash
+# Set privacy policy URL
+curl -X PATCH -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  "https://api.appstoreconnect.apple.com/v1/appInfoLocalizations/{LOCALIZATION_ID}" \
+  -d '{"data":{"type":"appInfoLocalizations","id":"{LOCALIZATION_ID}","attributes":{"privacyPolicyUrl":"https://kjprice.github.io/kj-mobile-apps/privacy-policy/APP_NAME.html"}}}'
+
+# Update description with EULA link
+curl -X PATCH -H "Authorization: Bearer $TOKEN" \
+  -H "Content-Type: application/json" \
+  "https://api.appstoreconnect.apple.com/v1/appStoreVersionLocalizations/{VERSION_LOCALIZATION_ID}" \
+  -d '{"data":{"type":"appStoreVersionLocalizations","id":"{VERSION_LOCALIZATION_ID}","attributes":{"description":"..."}}}'
+```
+
+### 5. App Store & Play Store Submission
 - Include **all** metadata: title, subtitle, description, keywords, categories, age rating, privacy policy URL, etc.
 - Include step-by-step submission instructions for both stores
 - Package name: `com.kjprice.APP_NAME`
 
-### 5. Configuration Files
+### 6. Configuration Files
 - `store.config.json` — complete store metadata config
 - `eas.json` — EAS Build profiles (development, preview, production)
 - `app.json` — full Expo config with all required plugins
 
-### 6. Visual Assets
+### 7. Visual Assets
 - Include instructions for generating all required assets using ChatGPT/DALL-E:
   - App icon (1024x1024)
   - Splash screen
@@ -54,7 +112,7 @@ The prompt you generate for Claude Code must cover **all** of the following sect
   - Feature graphic (Play Store)
 - Describe the style/theme to use when generating each asset
 
-### 7. Progress Tracking
+### 8. Progress Tracking
 - Create a `PLAN.md` file at the project root
 - The plan must list every step with checkboxes so Claude Code can track progress
 - Update `PLAN.md` as each step is completed
