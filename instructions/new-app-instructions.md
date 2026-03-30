@@ -41,7 +41,7 @@ The prompt you generate for Claude Code must cover **all** of the following sect
 Apps with subscriptions **will be rejected** without these. Set them up before submitting.
 
 **Privacy Policy page:**
-- Create `privacy-policy/APP_NAME.html` in the `kj-mobile-apps` repo
+- Create `privacy-policy/APP_NAME.html` in the `kj-mobile-apps` repo (`~/repos/misc/kj/kj-mobile-apps`)
 - Hosted at: `https://kjprice.github.io/kj-mobile-apps/privacy-policy/APP_NAME.html`
 - Must cover: what data is collected (or not), local storage, IAP payment handling, third-party services, children's privacy, contact email
 
