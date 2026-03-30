@@ -12,6 +12,8 @@ The user will describe their app below. Use this as the basis for the entire pro
 (paste app description here)
 </APP_DETAILS>
 
+For contact information, use kjmobileapps@gmail.com.
+
 ---
 
 ## What Your Prompt Must Include
