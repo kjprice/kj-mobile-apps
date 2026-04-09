@@ -411,20 +411,16 @@ npx expo install @react-native-firebase/app @react-native-firebase/analytics
 
 ### 11. Cross-Promotion "Other Apps" Page
 
-Display a dynamic list of your other apps, fetched from a remote JSON file.
+Display a dynamic list of your other apps, fetched from a remote JSON file. See @examples/OtherAppsScreen.tsx for a complete reference implementation.
 
 **The JSON file already exists** at `~/repos/misc/kj/kj-mobile-apps/store-assets/other-apps.json` and is deployed via GitHub Pages. As part of building the new app, **add an entry for it** to this JSON file and commit/push so all existing apps pick it up automatically. The `ios` and `android` store URLs won't be available until the app is published — use placeholder values and leave a note in `PLAN.md` to update them after submission.
 
 **Live URL:** `https://kjprice.github.io/kj-mobile-apps/store-assets/other-apps.json`
 
-**Implementation:**
-- Fetch the JSON on app launch from the URL above
-- Cache the JSON locally so the page works offline
-- Display as a list screen accessible from Settings or an "Other Apps" menu item
-- Each entry includes: app name, icon URL, short description, and App Store/Play Store link
-- Links must use App Store URLs (`https://apps.apple.com/app/idXXXXXXXXX`)
-- Tapping an entry opens the store listing via `Linking.openURL()`
-- **Exclude the current app** from the list (filter by package name)
+**Key behaviors (all demonstrated in the example):**
+- Fetches JSON on mount, falls back to AsyncStorage cache if offline
+- Filters out the current app by matching `package` against the Expo bundle identifier
+- Opens the correct store link based on `Platform.OS`
 
 **JSON format:**
 ```json
