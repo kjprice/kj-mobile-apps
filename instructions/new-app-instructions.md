@@ -344,24 +344,47 @@ if (await StoreReview.isAvailableAsync()) {
 
 ### 10. Google Analytics (Firebase)
 
-Add Firebase Analytics to track user engagement and feature usage.
+Add Firebase Analytics to track user engagement and feature usage. No server required — events are sent directly from the device to Google's servers.
 
-**Implementation:**
-- Use `@react-native-firebase/analytics` with `@react-native-firebase/app`
-- Add Expo config plugins for Firebase
-- Requires two platform config files:
-  - iOS: `GoogleService-Info.plist` (from Firebase Console)
-  - Android: `google-services.json` (from Firebase Console)
+**Step 1: Create Firebase project and register apps (CLI — fully automated):**
+
+```bash
+# Create the Firebase project (--analytics-region links a GA4 property automatically)
+firebase projects:create kj-APP_NAME --display-name "App Display Name" --analytics-region us
+
+# Register iOS app
+firebase apps:create ios --project kj-APP_NAME --bundle-id com.kjprice.APP_NAME --app-nickname "APP_NAME iOS"
+
+# Register Android app
+firebase apps:create android --project kj-APP_NAME --package-name com.kjprice.APP_NAME --app-nickname "APP_NAME Android"
+```
+
+**Step 2: Download config files into the Expo project root:**
+
+```bash
+# Download iOS config
+firebase apps:sdkconfig ios --project kj-APP_NAME -o ./GoogleService-Info.plist
+
+# Download Android config
+firebase apps:sdkconfig android --project kj-APP_NAME -o ./google-services.json
+```
+
+**Step 3: Install dependencies:**
 
 ```bash
 npx expo install @react-native-firebase/app @react-native-firebase/analytics
 ```
 
+**Step 4: Configure `app.json` plugins:**
+
 ```json
 {
   "expo": {
     "plugins": [
-      "@react-native-firebase/app",
+      ["@react-native-firebase/app", {
+        "ios": { "googleServicesFile": "./GoogleService-Info.plist" },
+        "android": { "googleServicesFile": "./google-services.json" }
+      }],
       "@react-native-firebase/analytics"
     ]
   }
@@ -374,30 +397,36 @@ npx expo install @react-native-firebase/app @react-native-firebase/analytics
 - **Must update App Store Connect "App Privacy" nutrition labels** — declare:
   - **Analytics** category: Usage Data, Device ID
   - Data is used for **Analytics** purpose
-  - Data is **linked to the user** if Firebase is tied to user accounts, otherwise **not linked**
+  - Data is **not linked to the user** (unless Firebase Auth is also used)
 - **Must update Google Play Data Safety** section similarly
 
 ### 11. Cross-Promotion "Other Apps" Page
 
 Display a dynamic list of your other apps, fetched from a remote JSON file.
 
+**The JSON file already exists** at `~/repos/misc/kj/kj-mobile-apps/data/other-apps.json` and is deployed via GitHub Pages. When a new app is published, add an entry to this file and push — all existing apps will pick it up automatically.
+
+**Live URL:** `https://kjprice.github.io/kj-mobile-apps/data/other-apps.json`
+
 **Implementation:**
-- Fetch a JSON file on app launch from a stable URL (e.g., GitHub Pages: `https://kjprice.github.io/kj-mobile-apps/data/other-apps.json`)
+- Fetch the JSON on app launch from the URL above
 - Cache the JSON locally so the page works offline
 - Display as a list screen accessible from Settings or an "Other Apps" menu item
-- Each entry should include: app name, icon URL, short description, and App Store/Play Store link
+- Each entry includes: app name, icon URL, short description, and App Store/Play Store link
 - Links must use App Store URLs (`https://apps.apple.com/app/idXXXXXXXXX`)
 - Tapping an entry opens the store listing via `Linking.openURL()`
+- **Exclude the current app** from the list (filter by package name)
 
-**Example JSON format:**
+**JSON format:**
 ```json
 [
   {
-    "name": "My Other App",
-    "icon": "https://kjprice.github.io/kj-mobile-apps/assets/my-other-app-icon.png",
+    "name": "App Name",
+    "package": "com.kjprice.appname",
+    "icon": "https://kjprice.github.io/kj-mobile-apps/store-assets/appname/icon.png",
     "description": "A short description of the app",
     "ios": "https://apps.apple.com/app/id1234567890",
-    "android": "https://play.google.com/store/apps/details?id=com.kjprice.myotherapp"
+    "android": "https://play.google.com/store/apps/details?id=com.kjprice.appname"
   }
 ]
 ```
@@ -406,3 +435,11 @@ Display a dynamic list of your other apps, fetched from a remote JSON file.
 - Links go to official store listings (not sideloading)
 - No executable code is loaded from the remote JSON
 - The page is clearly labeled as "More Apps" or "Our Apps"
+
+### 12. App Icon
+
+After generating the app icon (1024x1024) using DALL-E, save it to the shared `kj-mobile-apps` repo so it's available for the "Other Apps" cross-promotion and store listings:
+
+- Save to: `~/repos/misc/kj/kj-mobile-apps/store-assets/APP_NAME/icon.png`
+- Also place it in the Expo project as `assets/icon.png` (referenced by `app.json`)
+- The icon at the `store-assets` path is served via GitHub Pages and used by `other-apps.json`
