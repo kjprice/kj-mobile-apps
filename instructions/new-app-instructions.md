@@ -404,7 +404,7 @@ npx expo install @react-native-firebase/app @react-native-firebase/analytics
 
 Display a dynamic list of your other apps, fetched from a remote JSON file.
 
-**The JSON file already exists** at `~/repos/misc/kj/kj-mobile-apps/data/other-apps.json` and is deployed via GitHub Pages. When a new app is published, add an entry to this file and push — all existing apps will pick it up automatically.
+**The JSON file already exists** at `~/repos/misc/kj/kj-mobile-apps/data/other-apps.json` and is deployed via GitHub Pages. As part of building the new app, **add an entry for it** to this JSON file and commit/push so all existing apps pick it up automatically. The `ios` and `android` store URLs won't be available until the app is published — use placeholder values and leave a note in `PLAN.md` to update them after submission.
 
 **Live URL:** `https://kjprice.github.io/kj-mobile-apps/data/other-apps.json`
 
