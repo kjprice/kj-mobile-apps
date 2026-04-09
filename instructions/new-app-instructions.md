@@ -311,3 +311,98 @@ IAP products don't have their own "Submit for Review." Instead:
 1. Go to your app's **Distribution** tab → version page
 2. In the **In-App Purchases and Subscriptions** section, attach your products
 3. Submit the app version — products are reviewed together with the app
+
+
+### 9. App Store Review Prompt
+
+Prompt the user to leave an App Store review after meaningful engagement — not immediately.
+
+**Implementation:**
+- Use `expo-store-review` (wraps Apple's native `SKStoreReviewController`)
+- Track two values in AsyncStorage: `firstLaunchDate` and `appOpenCount`
+- On each app open, increment `appOpenCount`
+- Trigger `StoreReview.requestReview()` when **both** conditions are met:
+  - At least **3 days** since first launch
+  - At least **5 app opens**
+- Set a `hasPromptedReview` flag in AsyncStorage to avoid re-triggering
+- Apple limits the native review dialog to **3 appearances per 365-day period** — the system silently ignores extra calls
+
+```bash
+npx expo install expo-store-review
+```
+
+```typescript
+import * as StoreReview from 'expo-store-review';
+
+// After checking conditions:
+if (await StoreReview.isAvailableAsync()) {
+  await StoreReview.requestReview();
+}
+```
+
+**Important:** Do NOT use a custom review dialog — Apple rejects apps that use non-native review prompts.
+
+### 10. Google Analytics (Firebase)
+
+Add Firebase Analytics to track user engagement and feature usage.
+
+**Implementation:**
+- Use `@react-native-firebase/analytics` with `@react-native-firebase/app`
+- Add Expo config plugins for Firebase
+- Requires two platform config files:
+  - iOS: `GoogleService-Info.plist` (from Firebase Console)
+  - Android: `google-services.json` (from Firebase Console)
+
+```bash
+npx expo install @react-native-firebase/app @react-native-firebase/analytics
+```
+
+```json
+{
+  "expo": {
+    "plugins": [
+      "@react-native-firebase/app",
+      "@react-native-firebase/analytics"
+    ]
+  }
+}
+```
+
+**Privacy & App Store Impact:**
+- No app store review issues — Firebase Analytics is used by millions of apps
+- **Must update Privacy Policy** to disclose analytics data collection (device info, usage patterns, app events)
+- **Must update App Store Connect "App Privacy" nutrition labels** — declare:
+  - **Analytics** category: Usage Data, Device ID
+  - Data is used for **Analytics** purpose
+  - Data is **linked to the user** if Firebase is tied to user accounts, otherwise **not linked**
+- **Must update Google Play Data Safety** section similarly
+
+### 11. Cross-Promotion "Other Apps" Page
+
+Display a dynamic list of your other apps, fetched from a remote JSON file.
+
+**Implementation:**
+- Fetch a JSON file on app launch from a stable URL (e.g., GitHub Pages: `https://kjprice.github.io/kj-mobile-apps/data/other-apps.json`)
+- Cache the JSON locally so the page works offline
+- Display as a list screen accessible from Settings or an "Other Apps" menu item
+- Each entry should include: app name, icon URL, short description, and App Store/Play Store link
+- Links must use App Store URLs (`https://apps.apple.com/app/idXXXXXXXXX`)
+- Tapping an entry opens the store listing via `Linking.openURL()`
+
+**Example JSON format:**
+```json
+[
+  {
+    "name": "My Other App",
+    "icon": "https://kjprice.github.io/kj-mobile-apps/assets/my-other-app-icon.png",
+    "description": "A short description of the app",
+    "ios": "https://apps.apple.com/app/id1234567890",
+    "android": "https://play.google.com/store/apps/details?id=com.kjprice.myotherapp"
+  }
+]
+```
+
+**App Store Review:** No issues — cross-promoting your own apps is common and explicitly allowed. Just ensure:
+- Links go to official store listings (not sideloading)
+- No executable code is loaded from the remote JSON
+- The page is clearly labeled as "More Apps" or "Our Apps"
