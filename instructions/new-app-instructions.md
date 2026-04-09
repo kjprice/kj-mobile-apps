@@ -101,6 +101,8 @@ curl -X PATCH -H "Authorization: Bearer $TOKEN" \
 - Include step-by-step submission instructions for both stores
 - Package name: `com.kjprice.APP_NAME`
 
+> **⚠️ Guideline 1.1 — Objectionable Content:** Apple will reject apps whose metadata references suggestive or objectionable content. Avoid words like "spicy", "intimacy", "sexy", or similar in the description, keywords, and promotional text — even if the in-app content itself is within guidelines. Keep store metadata family-friendly; the content can be more mature inside the app under the appropriate age rating (17+).
+
 ### 6. Configuration Files
 - `store.config.json` — complete store metadata config
 - `eas.json` — EAS Build profiles (development, preview, production)
@@ -346,18 +348,24 @@ if (await StoreReview.isAvailableAsync()) {
 
 Add Firebase Analytics to track user engagement and feature usage. No server required — events are sent directly from the device to Google's servers.
 
-**Step 1: Create Firebase project and register apps (CLI — fully automated):**
+**Step 1: Create Firebase project and register apps:**
+
+> **⚠️ First-time setup:** If `firebase projects:create` fails with a 403 "permission denied" error, you must create the first project manually at [console.firebase.google.com](https://console.firebase.google.com/) to accept the Firebase Terms of Service. After that, CLI creation works for subsequent projects.
+
+> **Analytics account:** When prompted for a Google Analytics account during project creation, select an existing shared account (e.g., "KJ Mobile Apps") or create a new one. This account groups GA4 properties across apps.
 
 ```bash
-# Create the Firebase project (--analytics-region links a GA4 property automatically)
-firebase projects:create kj-APP_NAME --display-name "App Display Name" --analytics-region us
+# Create the Firebase project
+firebase projects:create kj-APP_NAME --display-name "App Display Name"
 
 # Register iOS app
-firebase apps:create ios --project kj-APP_NAME --bundle-id com.kjprice.APP_NAME --app-nickname "APP_NAME iOS"
+firebase apps:create ios --project kj-APP_NAME --bundle-id com.kjprice.APP_NAME
 
 # Register Android app
-firebase apps:create android --project kj-APP_NAME --package-name com.kjprice.APP_NAME --app-nickname "APP_NAME Android"
+firebase apps:create android --project kj-APP_NAME --package-name com.kjprice.APP_NAME
 ```
+
+> **Note:** Firebase may append a random suffix to the project ID (e.g., `kj-APP_NAME-a8aea`). Use `firebase projects:list` or `gcloud projects list` to find the actual project ID, then use that ID in all subsequent commands.
 
 **Step 2: Download config files into the Expo project root:**
 
@@ -384,12 +392,13 @@ npx expo install @react-native-firebase/app @react-native-firebase/analytics
       ["@react-native-firebase/app", {
         "ios": { "googleServicesFile": "./GoogleService-Info.plist" },
         "android": { "googleServicesFile": "./google-services.json" }
-      }],
-      "@react-native-firebase/analytics"
+      }]
     ]
   }
 }
 ```
+
+> **⚠️ Do NOT add `@react-native-firebase/analytics` as a plugin.** It's an ES Module that causes `require()` errors with EAS CLI's config plugin resolver. Only `@react-native-firebase/app` needs to be a plugin — analytics works as a dependency import only.
 
 **Privacy & App Store Impact:**
 - No app store review issues — Firebase Analytics is used by millions of apps
@@ -404,9 +413,9 @@ npx expo install @react-native-firebase/app @react-native-firebase/analytics
 
 Display a dynamic list of your other apps, fetched from a remote JSON file.
 
-**The JSON file already exists** at `~/repos/misc/kj/kj-mobile-apps/data/other-apps.json` and is deployed via GitHub Pages. As part of building the new app, **add an entry for it** to this JSON file and commit/push so all existing apps pick it up automatically. The `ios` and `android` store URLs won't be available until the app is published — use placeholder values and leave a note in `PLAN.md` to update them after submission.
+**The JSON file already exists** at `~/repos/misc/kj/kj-mobile-apps/store-assets/other-apps.json` and is deployed via GitHub Pages. As part of building the new app, **add an entry for it** to this JSON file and commit/push so all existing apps pick it up automatically. The `ios` and `android` store URLs won't be available until the app is published — use placeholder values and leave a note in `PLAN.md` to update them after submission.
 
-**Live URL:** `https://kjprice.github.io/kj-mobile-apps/data/other-apps.json`
+**Live URL:** `https://kjprice.github.io/kj-mobile-apps/store-assets/other-apps.json`
 
 **Implementation:**
 - Fetch the JSON on app launch from the URL above
