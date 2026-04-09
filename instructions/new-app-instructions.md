@@ -333,10 +333,18 @@ Prompt the user to leave an App Store review after meaningful engagement — not
 npx expo install expo-store-review
 ```
 
-```typescript
-import * as StoreReview from 'expo-store-review';
+> **⚠️ `expo-store-review` requires native modules not available in Expo Go.** Use the same dynamic require pattern as `react-native-iap` to avoid crashes during development:
 
-// After checking conditions:
+```typescript
+let StoreReview: typeof import('expo-store-review') | null = null;
+try {
+  StoreReview = require('expo-store-review');
+} catch {
+  console.log('StoreReview: Native module not available (running in Expo Go?)');
+}
+
+// Guard all calls:
+if (!StoreReview) return;
 if (await StoreReview.isAvailableAsync()) {
   await StoreReview.requestReview();
 }
@@ -389,6 +397,10 @@ npx expo install @react-native-firebase/app @react-native-firebase/analytics
 {
   "expo": {
     "plugins": [
+      ["expo-build-properties", {
+        "ios": { "useFrameworks": "static" },
+        "android": { "targetSdkVersion": 35 }
+      }],
       ["@react-native-firebase/app", {
         "ios": { "googleServicesFile": "./GoogleService-Info.plist" },
         "android": { "googleServicesFile": "./google-services.json" }
@@ -397,6 +409,8 @@ npx expo install @react-native-firebase/app @react-native-firebase/analytics
   }
 }
 ```
+
+> **⚠️ `useFrameworks: "static"` is required.** Without it, `pod install` fails with: `The Swift pod 'FirebaseCoreInternal' depends upon 'GoogleUtilities', which does not define modules`. This tells CocoaPods to build Firebase as static frameworks with proper module maps.
 
 > **⚠️ Do NOT add `@react-native-firebase/analytics` as a plugin.** It's an ES Module that causes `require()` errors with EAS CLI's config plugin resolver. Only `@react-native-firebase/app` needs to be a plugin — analytics works as a dependency import only.
 
