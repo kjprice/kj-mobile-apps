@@ -462,3 +462,95 @@ After generating the app icon (1024x1024) using DALL-E, save it to the shared `k
 - Save to: `~/repos/misc/kj/kj-mobile-apps/store-assets/APP_NAME/icon.png`
 - Also place it in the Expo project as `assets/icon.png` (referenced by `app.json`)
 - The icon at the `store-assets` path is served via GitHub Pages and used by `other-apps.json`
+
+### 13. CLAUDE.md
+
+Create a `CLAUDE.md` file at the project root. This file gives Claude Code project-specific context so it can work effectively in the repo across conversations.
+
+**Must include:**
+- **Project overview** — app name, what it does, target platforms
+- **Tech stack** — React Native, Expo, key libraries (e.g., `react-native-iap`, `@react-native-firebase/analytics`)
+- **Package info** — bundle identifier, package name
+- **Development commands** — how to install deps, run dev, build, lint, test
+- **Project structure** — key directories and their purpose
+- **IAP product IDs** — all subscription/product SKUs
+- **Store submission status** — current state of App Store / Play Store review
+- **Environment setup** — any required config files, env vars, or credentials paths
+- **Known issues / workarounds** — anything non-obvious that would trip up a future session
+
+**Self-updating rule — include this at the top of every CLAUDE.md:**
+
+```markdown
+> **Keep this file up to date.** Whenever you change something that invalidates
+> information in this file (e.g., add/remove a dependency, change a command,
+> rename a directory, update a product ID, change submission status), update
+> CLAUDE.md in the same commit. This file is the source of truth for Claude Code.
+```
+
+**Template:**
+
+```markdown
+> **Keep this file up to date.** Whenever you change something that invalidates
+> information in this file (e.g., add/remove a dependency, change a command,
+> rename a directory, update a product ID, change submission status), update
+> CLAUDE.md in the same commit. This file is the source of truth for Claude Code.
+
+# APP_NAME
+
+Short description of the app.
+
+## Tech Stack
+- React Native + Expo (managed workflow)
+- react-native-iap (in-app purchases)
+- @react-native-firebase/analytics
+- expo-store-review
+
+## Package Info
+- Bundle ID: `com.kjprice.APP_NAME`
+- App Store ID: (pending)
+- Play Store: (pending)
+
+## Development
+
+### Install
+npm install
+
+### Run (Expo Go)
+npx expo start
+
+### Build
+eas build --platform ios --profile preview
+eas build --platform ios --profile production
+
+## Project Structure
+- `app/` — screens and navigation
+- `components/` — reusable UI components
+- `services/` — IAP service, analytics, etc.
+- `constants/` — product IDs, config values
+- `assets/` — icons, splash, images
+
+## IAP Product IDs
+- `com.kjprice.APP_NAME.subscription.monthly`
+- `com.kjprice.APP_NAME.subscription.yearly`
+- `com.kjprice.APP_NAME.subscription.lifetime`
+
+## Store Status
+- **App Store:** Not yet submitted
+- **Play Store:** Not yet submitted
+
+## Known Issues
+- (list any workarounds or gotchas here)
+```
+
+### 14. README.md
+
+Create a `README.md` at the project root with user-facing project documentation.
+
+**Must include:**
+- App name and description
+- Screenshots or feature list
+- How to set up the development environment
+- How to run the app locally
+- How to build for production
+- Link to privacy policy
+- Contact email: kjmobileapps@gmail.com
