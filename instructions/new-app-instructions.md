@@ -468,15 +468,23 @@ After generating the app icon (1024x1024) using DALL-E, save it to the shared `k
 Create a `CLAUDE.md` file at the project root. This file gives Claude Code project-specific context so it can work effectively in the repo across conversations.
 
 **Must include:**
-- **Project overview** — app name, what it does, target platforms
-- **Tech stack** — React Native, Expo, key libraries (e.g., `react-native-iap`, `@react-native-firebase/analytics`)
-- **Package info** — bundle identifier, package name
-- **Development commands** — how to install deps, run dev, build, lint, test
+- **Project overview** — app name, display name, what it does
+- **Package info** — bundle identifier, EAS project slug, App Store / Play Store IDs
+- **Tech stack** — React Native, Expo version, key libraries
+- **Development commands** — install, run, build, type-check, submit
+- **Expo Go note** — whether Expo Go works or requires a dev client (native modules like `react-native-iap`, MMKV, Firebase break Expo Go)
+- **Node version requirement** — which Node versions are supported
+- **Navigation structure** — root navigator, tab layout, modal screens
+- **State management** — approach (Redux, Context, etc.), where state lives, persistence method
 - **Project structure** — key directories and their purpose
-- **IAP product IDs** — all subscription/product SKUs
+- **IAP product IDs** — all subscription/product SKUs with prices
+- **Freemium model** — what's free vs premium, paywall triggers
 - **Store submission status** — current state of App Store / Play Store review
-- **Environment setup** — any required config files, env vars, or credentials paths
-- **Known issues / workarounds** — anything non-obvious that would trip up a future session
+- **Related resources** — legal pages, store metadata, API keys (paths in `kj-mobile-apps` repo)
+- **Known dependency constraints** — version pins and why (e.g., `react-native-iap` v14 requires `react-native-nitro-modules`)
+- **Common pitfalls** — anything non-obvious that would trip up a future session
+- **Implementation status** — what's completed, in progress, and pending
+- **PLAN.md reference** — remind Claude to check PLAN.md before working on features
 
 **Self-updating rule — include this at the top of every CLAUDE.md:**
 
@@ -495,51 +503,144 @@ Create a `CLAUDE.md` file at the project root. This file gives Claude Code proje
 > rename a directory, update a product ID, change submission status), update
 > CLAUDE.md in the same commit. This file is the source of truth for Claude Code.
 
-# APP_NAME
+# APP_DISPLAY_NAME
 
 Short description of the app.
 
-## Tech Stack
-- React Native + Expo (managed workflow)
-- react-native-iap (in-app purchases)
-- @react-native-firebase/analytics
-- expo-store-review
+- **Bundle ID**: `com.kjprice.APP_NAME`
+- **EAS project slug**: `APP_SLUG` (must match EAS project ID — do not change)
+- **App Store ID**: (pending)
+- **Play Store**: (pending)
 
-## Package Info
-- Bundle ID: `com.kjprice.APP_NAME`
-- App Store ID: (pending)
-- Play Store: (pending)
+## ⚠️ Check PLAN.md First
 
-## Development
+Before working on any features, check `PLAN.md` for current status, implementation
+details, and what's completed vs in-progress vs pending.
 
-### Install
-npm install
+## Commands
 
-### Run (Expo Go)
+```bash
+# Install dependencies
+npm install   # or yarn install
+
+# Development — start Metro dev server
 npx expo start
 
-### Build
-eas build --platform ios --profile preview
-eas build --platform ios --profile production
+# Build (via EAS cloud)
+eas build --platform ios --profile preview      # physical device testing
+eas build --platform ios --profile production    # App Store submission
+
+# Submit to stores
+eas submit -p ios
+eas submit -p android
+
+# Type checking
+npx tsc --noEmit
+```
+
+**Expo Go**: Does NOT work with this project — `react-native-iap` and Firebase
+require native modules. Use `eas build --profile development` for a dev client,
+or `eas build --profile preview` for ad-hoc testing on a physical device.
+
+**Node version**: Requires Node v18 or v20 LTS. Node v24+ is not supported
+(experimental TypeScript features conflict with Expo).
+
+## Tech Stack
+
+- React Native + Expo (managed workflow)
+- react-native-iap v14+ (in-app purchases, requires react-native-nitro-modules)
+- @react-native-firebase/analytics
+- expo-store-review
+- expo-haptics
+
+## Navigation
+
+Describe the navigation structure here:
+- Root stack (onboarding → main tabs → modals)
+- Tab layout (which tabs, what screens)
+- Modal screens (paywall, etc.)
+
+## State Management
+
+Describe approach here (Redux Toolkit + MMKV, React Context + AsyncStorage, etc.):
+- Where state lives
+- How it's persisted
+- Key slices/contexts
 
 ## Project Structure
-- `app/` — screens and navigation
-- `components/` — reusable UI components
-- `services/` — IAP service, analytics, etc.
-- `constants/` — product IDs, config values
+
+- `src/screens/` — screen components
+- `src/components/` — reusable UI components
+- `src/hooks/` — custom hooks
+- `src/services/` — IAP service, analytics, etc.
+- `src/constants/` — product IDs, config values
+- `src/utils/` — helper functions
+- `src/navigation/` — navigators and route types
 - `assets/` — icons, splash, images
 
 ## IAP Product IDs
-- `com.kjprice.APP_NAME.subscription.monthly`
-- `com.kjprice.APP_NAME.subscription.yearly`
-- `com.kjprice.APP_NAME.subscription.lifetime`
+
+- `com.kjprice.APP_NAME.subscription.monthly` ($X.XX/mo)
+- `com.kjprice.APP_NAME.subscription.yearly` ($XX.XX/yr)
+- `com.kjprice.APP_NAME.subscription.lifetime` ($XX.XX)
+
+## Freemium Model
+
+**Free tier:**
+- (list free features/limits)
+
+**Premium tier:**
+- (list premium features)
+
+**Paywall triggers:**
+- (list what triggers the paywall)
+
+## Related Resources
+
+- **Legal pages**: `~/repos/misc/kj/kj-mobile-apps/privacy-policy/APP_NAME.html`
+- **Store metadata**: `store.config.json` in project root
+- **Apple API key**: `~/repos/misc/kj/kj-mobile-apps/data/AuthKey_985XKZ364C.p8`
+- **Google service account**: `~/repos/misc/kj/kj-mobile-apps/data/service-account.json`
+
+## Key Conventions
+
+- TypeScript strict mode with path alias `@/*` → `src/*`
+- Functional components with hooks throughout
+- Expo manages native folders — `/ios` and `/android` are gitignored
+- EAS iOS builds require `"image": "latest"` in build profiles for IAP support
+
+## Known Dependency Constraints
+
+- `react-native-iap` must be v14+ (v12/v13 depend on `RCT-Folly` removed in RN 0.83)
+- `react-native-iap` v14 requires `react-native-nitro-modules` as a peer dependency
+- (add any app-specific constraints here)
+
+## Common Pitfalls
+
+| Problem | Fix |
+|---------|-----|
+| Metro bundler errors on start | Check Node version (must be v18/v20), try `npx expo start --clear` |
+| IAP "Invalid product ID" | Ensure `getSubscriptions()`/`getProducts()` called before purchase |
+| Build fails with `appTransactionID` | Add `"image": "latest"` to eas.json iOS build profiles |
+| (add app-specific pitfalls) | |
 
 ## Store Status
+
 - **App Store:** Not yet submitted
 - **Play Store:** Not yet submitted
 
-## Known Issues
-- (list any workarounds or gotchas here)
+## Implementation Status
+
+**✅ Completed:**
+- (list completed features)
+
+**🚧 In Progress:**
+- (list current work)
+
+**⏳ Pending:**
+- (list upcoming work)
+
+See PLAN.md for detailed status and implementation roadmap.
 ```
 
 ### 14. README.md
