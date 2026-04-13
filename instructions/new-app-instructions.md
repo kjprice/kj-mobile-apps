@@ -643,7 +643,41 @@ Describe approach here (Redux Toolkit + MMKV, React Context + AsyncStorage, etc.
 See PLAN.md for detailed status and implementation roadmap.
 ```
 
-### 14. README.md
+### 14. UX Essentials
+
+Every screen must follow these patterns from day one — retrofitting keyboard handling and scroll behavior is tedious.
+
+**Keyboard Dismissal (required on every screen with a TextInput):**
+- Wrap the screen content in `TouchableWithoutFeedback onPress={Keyboard.dismiss}` so tapping outside any input dismisses the keyboard
+- Use `ScrollView` (not bare `View`) as the content container so the user can scroll to reach buttons hidden behind the keyboard
+- Set `keyboardShouldPersistTaps="handled"` on ScrollViews containing forms — without this, tapping a button while the keyboard is open requires two taps (one to dismiss, one to press)
+- Every save/cancel/delete handler should call `Keyboard.dismiss()` as its first line
+- On iOS, `KeyboardAvoidingView` with `behavior="padding"` is still needed for modals — ScrollView alone doesn't push content up
+
+**TextInput Chaining:**
+- Multi-field forms should chain inputs: `returnKeyType="next"` + `onSubmitEditing={() => nextRef.current?.focus()}`
+- The final input should use `returnKeyType="done"` + `onSubmitEditing={handleSave}`
+- Use `submitBehavior="submit"` (not the deprecated `blurOnSubmit={false}`) to keep focus after submit on intermediate fields
+- Use `submitBehavior="blurAndSubmit"` on the final field
+
+**Scrollability:**
+- Use `ScrollView` with `contentContainerStyle={{ flexGrow: 1 }}` instead of `View style={{ flex: 1 }}` on any screen that could overflow (lists, long forms, settings pages)
+- Add `paddingBottom: 40` to content containers so the last item isn't flush against the bottom edge
+- Never use `FlatList` with `scrollEnabled={false}` inside a non-scrollable parent — use `.map()` inside a `ScrollView` instead
+
+**Haptic Feedback (`expo-haptics`):**
+- `Haptics.notificationAsync(Success)` — on successful save, chore completion, purchase
+- `Haptics.notificationAsync(Warning)` — on destructive confirmations (delete, reset data)
+- `Haptics.impactAsync(Medium)` — on drag start
+- `Haptics.impactAsync(Light)` — on drag drop
+- `Haptics.selectionAsync()` — on tab/item selection, toggle switches
+- Don't over-haptic — avoid haptics on every tap; reserve for meaningful state changes
+
+**Data Reset:**
+- If the app has a "Reset All Data" option, it must actually call `persistor.purge()` (or equivalent) — not just show a fake confirmation alert
+- Always include a destructive-style confirmation dialog before purging
+
+### 15. README.md
 
 Create a `README.md` at the project root with user-facing project documentation.
 
