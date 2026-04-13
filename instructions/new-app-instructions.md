@@ -485,6 +485,8 @@ Create a `CLAUDE.md` file at the project root. This file gives Claude Code proje
 - **Common pitfalls** — anything non-obvious that would trip up a future session
 - **Implementation status** — what's completed, in progress, and pending
 - **PLAN.md reference** — remind Claude to check PLAN.md before working on features
+- **Testing** — framework, what's tested, how to run tests
+- **Shared instructions rule** — remind Claude to update the shared instructions file when new cross-app patterns are discovered
 
 **Self-updating rule — include this at the top of every CLAUDE.md:**
 
@@ -493,6 +495,12 @@ Create a `CLAUDE.md` file at the project root. This file gives Claude Code proje
 > information in this file (e.g., add/remove a dependency, change a command,
 > rename a directory, update a product ID, change submission status), update
 > CLAUDE.md in the same commit. This file is the source of truth for Claude Code.
+>
+> **Update shared instructions.** When you discover a new pattern, pitfall, or
+> convention that applies to ALL apps (not just this one), also update
+> `~/repos/misc/kj/kj-mobile-apps/instructions/new-app-instructions.md` so
+> future apps benefit. Examples: new dependency constraints, Expo/EAS gotchas,
+> App Store rejection reasons, useful libraries.
 ```
 
 **Template:**
@@ -502,6 +510,12 @@ Create a `CLAUDE.md` file at the project root. This file gives Claude Code proje
 > information in this file (e.g., add/remove a dependency, change a command,
 > rename a directory, update a product ID, change submission status), update
 > CLAUDE.md in the same commit. This file is the source of truth for Claude Code.
+>
+> **Update shared instructions.** When you discover a new pattern, pitfall, or
+> convention that applies to ALL apps (not just this one), also update
+> `~/repos/misc/kj/kj-mobile-apps/instructions/new-app-instructions.md` so
+> future apps benefit. Examples: new dependency constraints, Expo/EAS gotchas,
+> App Store rejection reasons, useful libraries.
 
 # APP_DISPLAY_NAME
 
@@ -536,6 +550,9 @@ eas submit -p android
 
 # Type checking
 npx tsc --noEmit
+
+# Run tests
+npm test
 ```
 
 **Expo Go**: Does NOT work with this project — `react-native-iap` and Firebase
@@ -624,6 +641,13 @@ Describe approach here (Redux Toolkit + MMKV, React Context + AsyncStorage, etc.
 | Build fails with `appTransactionID` | Add `"image": "latest"` to eas.json iOS build profiles |
 | (add app-specific pitfalls) | |
 
+## Testing
+
+- **Framework**: Jest + React Testing Library (`@testing-library/react-native`)
+- **Run**: `npm test`
+- **Convention**: `__tests__/ComponentName.test.tsx` colocated with source
+- **What's tested**: (list tested areas — utils, hooks, screens, IAP flow)
+
 ## Store Status
 
 - **App Store:** Not yet submitted
@@ -689,3 +713,71 @@ Create a `README.md` at the project root with user-facing project documentation.
 - How to build for production
 - Link to privacy policy
 - Contact email: kjmobileapps@gmail.com
+
+### 16. Unit Testing
+
+Every new feature, screen, hook, and utility must have corresponding tests. Write tests alongside the code — not as an afterthought.
+
+**Setup:**
+
+```bash
+npm install --save-dev jest @testing-library/react-native @testing-library/jest-native
+```
+
+Add to `package.json`:
+```json
+{
+  "scripts": {
+    "test": "jest"
+  }
+}
+```
+
+Create `jest.config.js`:
+```js
+module.exports = {
+  preset: 'jest-expo',
+  setupFilesAfterSetup: ['@testing-library/jest-native/extend-expect'],
+  transformIgnorePatterns: [
+    'node_modules/(?!((jest-)?react-native|@react-native(-community)?)|expo(nent)?|@expo(nent)?/.*|@expo-google-fonts/.*|react-navigation|@react-navigation/.*|@sentry/react-native|native-base|react-native-svg)'
+  ],
+};
+```
+
+**What to test:**
+
+| Category | Examples | Priority |
+|----------|----------|----------|
+| Utility functions | Date helpers, XP calculations, hash functions, formatters | Always |
+| Custom hooks | State transitions, side effects, return values | Always |
+| Component rendering | Key screens render without crashing, conditional UI (premium vs free) | High |
+| IAP service logic | Mock native modules, test purchase flow state transitions | High |
+| Navigation | Correct screens shown based on app state (onboarding vs main) | Medium |
+
+**File convention:** Colocate tests next to source files:
+- `src/utils/__tests__/dateUtils.test.ts`
+- `src/hooks/__tests__/useStreak.test.ts`
+- `src/screens/__tests__/HomeScreen.test.tsx`
+
+**Native module mocking:** Modules like `react-native-iap`, `expo-haptics`, and `expo-store-review` need mocks since they require native code. Create mocks in `__mocks__/` at the project root or inline with `jest.mock()`.
+
+**Run:**
+```bash
+npm test              # run all tests
+npm test -- --watch   # watch mode during development
+```
+
+### 17. On-Device Testing (ADB MCP)
+
+> ⚠️ **TODO:** ADB MCP is not yet installed. Once installed, update this section with the exact MCP tool names and usage examples.
+
+Before submitting to the App Store or Play Store, test the app on a real device using the ADB MCP server (for Android) and physical device builds (for iOS).
+
+**What to test on-device:**
+- **Golden path**: Onboarding → core features → IAP purchase flow → settings
+- **Haptic feedback**: Verify haptics fire on correct interactions
+- **Keyboard behavior**: Dismissal, input chaining, scroll behind keyboard
+- **Navigation**: All tab transitions, modal presentation/dismissal, deep links
+- **IAP**: Sandbox purchase completes, restore works, premium features unlock
+- **Offline behavior**: App works without network (if applicable)
+- **Performance**: No jank on scroll, smooth animations, fast screen transitions
