@@ -769,15 +769,139 @@ npm test -- --watch   # watch mode during development
 
 ### 17. On-Device Testing (ADB MCP)
 
-> ⚠️ **TODO:** ADB MCP is not yet installed. Once installed, update this section with the exact MCP tool names and usage examples.
+Before submitting to the App Store or Play Store, perform thorough on-device testing using the **Android Debug Bridge (ADB) MCP server**. This allows Claude Code to directly interact with a connected Android device or emulator — tapping buttons, typing text, scrolling, taking screenshots, and inspecting the UI hierarchy.
 
-Before submitting to the App Store or Play Store, test the app on a real device using the ADB MCP server (for Android) and physical device builds (for iOS).
+#### Prerequisites
 
-**What to test on-device:**
-- **Golden path**: Onboarding → core features → IAP purchase flow → settings
-- **Haptic feedback**: Verify haptics fire on correct interactions
-- **Keyboard behavior**: Dismissal, input chaining, scroll behind keyboard
-- **Navigation**: All tab transitions, modal presentation/dismissal, deep links
-- **IAP**: Sandbox purchase completes, restore works, premium features unlock
-- **Offline behavior**: App works without network (if applicable)
-- **Performance**: No jank on scroll, smooth animations, fast screen transitions
+- Android device connected via USB with **USB debugging enabled**, or an Android emulator running
+- ADB installed and the device visible via `adb devices`
+- The app built and installed on the device (e.g., via `npx expo run:android` or `eas build`)
+
+#### Available MCP Tools
+
+| Tool | Description |
+|------|-------------|
+| `list_apps` | List installed apps matching a name pattern (use to find your app's package) |
+| `open_app` | Launch an app by package name (e.g., `com.kjprice.myapp`) |
+| `capture_screenshot` | Take a screenshot and save to a named test folder |
+| `capture_ui_dump` | Dump the full UI hierarchy (XML) to inspect element bounds and text |
+| `input_tap` | Tap at specific x,y coordinates on screen |
+| `input_text` | Type text into the currently focused input field |
+| `input_scroll` | Scroll in a direction: `up`, `down`, `left`, `right` |
+| `input_keyevent` | Send key events: `BACK`, `HOME`, `ENTER`, `DELETE` |
+| `create_test_folder` | Create a folder to organize screenshots for a test run |
+
+#### Testing Workflow
+
+Follow this workflow for every app before store submission:
+
+**Step 1: Setup**
+```
+1. create_test_folder(test_name="myapp-prerelease")
+2. list_apps(app_name="kjprice")          → find exact package name
+3. open_app(package_name="com.kjprice.myapp")
+```
+
+**Step 2: Identify UI Elements**
+```
+1. capture_ui_dump()                      → inspect element bounds, text, and clickable areas
+2. capture_screenshot(test_name="myapp-prerelease", step_name="001_launch")
+```
+
+Use `capture_ui_dump` to get exact coordinates for tap targets. The dump returns XML with `bounds` attributes (e.g., `[50,100][350,200]`) — tap the center of the bounds rectangle.
+
+**Step 3: Walk Through Test Scenarios**
+
+For each scenario, use a combination of `input_tap`, `input_text`, `input_scroll`, `input_keyevent`, and `capture_screenshot` to navigate through the app and document results.
+
+#### Required Test Scenarios
+
+Run all of the following before submitting to either store. Screenshot each step.
+
+**1. Golden Path (Critical)**
+- App launch → onboarding (if any) → core feature interaction → settings → back
+- Every screen the user sees in a normal first session must be visited
+
+**2. Navigation**
+- All tab bar items respond to taps
+- Modal screens present and dismiss correctly (use `BACK` keyevent to dismiss)
+- Deep navigation stacks: push 3+ screens, then back out completely
+- No blank screens or crashes on any transition
+
+**3. Text Input & Keyboard**
+- Tap each text field → `input_text` to type → verify text appears via `capture_ui_dump`
+- Use `ENTER` keyevent to submit forms
+- Use `DELETE` keyevent to clear text and verify behavior
+- Verify keyboard does not obscure input fields (screenshot while keyboard is visible)
+
+**4. Scrolling**
+- Long content screens: `input_scroll(direction="down")` multiple times, screenshot at bottom
+- Scroll back up and verify content is intact
+- Horizontal scrollers (if any): `input_scroll(direction="left")` / `right`
+
+**5. IAP Flow (if app has purchases)**
+- Navigate to paywall/purchase screen, screenshot it
+- Tap purchase button (Google Play sandbox will intercept)
+- Screenshot the purchase dialog
+- Verify premium features unlock after purchase
+- Test "Restore Purchases" button
+- Verify free-tier UI shows correctly when not purchased
+
+**6. Haptic Feedback Points**
+- Tap every interaction that should trigger haptics (buttons, toggles, sliders)
+- Note: haptics can't be verified visually — confirm the tap registers and the UI responds correctly
+
+**7. Edge Cases**
+- Empty states: verify screens look correct with no data
+- Error states: disable network and attempt network-dependent actions
+- Back button from every screen (use `BACK` keyevent)
+- Press `HOME` then reopen the app — verify state is preserved
+- Rotate device if orientation is supported
+
+**8. Visual Polish**
+- Screenshot every screen and inspect for:
+  - Text truncation or overlap
+  - Elements hidden behind status bar or navigation bar
+  - Inconsistent spacing or alignment
+  - Dark mode rendering (if supported)
+
+#### Screenshot Naming Convention
+
+Use sequential, descriptive step names:
+```
+001_launch
+002_onboarding_welcome
+003_onboarding_complete
+004_home_screen
+005_home_scroll_bottom
+006_settings_screen
+007_iap_paywall
+008_iap_purchase_dialog
+009_premium_unlocked
+010_empty_state
+```
+
+#### Interpreting UI Dumps
+
+The `capture_ui_dump` tool returns XML with element details. Key attributes:
+- `text` — visible text on the element
+- `content-desc` — accessibility description
+- `bounds` — screen coordinates as `[left,top][right,bottom]`
+- `clickable` — whether the element responds to taps
+- `focused` — whether the element has input focus
+
+To tap an element with bounds `[100,200][300,400]`:
+```
+x = (100 + 300) / 2 = 200
+y = (200 + 400) / 2 = 300
+input_tap(x=200, y=300)
+```
+
+#### When Testing is Complete
+
+After all scenarios pass:
+1. Review all screenshots in the test folder for visual issues
+2. Fix any bugs found and re-test the affected scenarios
+3. Proceed to store submission (Section 5)
+
+> **Note:** ADB MCP only tests Android. For iOS, build with `eas build --platform ios` and test on a physical device via TestFlight or direct install. Prioritize Android testing via ADB MCP since it can be automated, then manually verify the same flows on iOS.
